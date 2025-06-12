@@ -102,6 +102,16 @@ http://www.templatemo.com/tm-507-victory
                                 <fieldset>
                                     <button type="submit" id="form-submit" class="btn">Enviar Mensaje</button>
                                 </fieldset>
+                                
+                                <!-- 🧪 BOTÓN DE PRUEBA (REMOVER EN PRODUCCIÓN) -->
+                                <fieldset style="margin-top: 10px;">
+                                    <button type="button" onclick="testGoogleSheets()" class="btn" style="background: #ff6b35; border-color: #ff6b35;">
+                                        🧪 Llenar Datos de Prueba
+                                    </button>
+                                    <small style="display: block; margin-top: 5px; color: #666; font-size: 12px;">
+                                        ⚠️ Solo para pruebas - Remover en producción
+                                    </small>
+                                </fieldset>
                             </div>
                         </div>
                     </form>
@@ -207,62 +217,310 @@ http://www.templatemo.com/tm-507-victory
     }
     </script>
 
-    <!-- Script para Google Sheets -->
+    <!-- 🚀 SISTEMA DE FORMULARIO CON GOOGLE SHEETS + APPS SCRIPT -->
     <script>
-    // ⚠️ IMPORTANTE: Reemplaza esta URL con la URL de tu Google Apps Script
+    // 🔥 CONFIGURACIÓN PRINCIPAL
+    // ⚠️ PASO CRÍTICO: Reemplaza esta URL con la de tu Google Apps Script
+    // 🚨 INSTRUCCIONES PARA OBTENER TU URL:
+    // 1. Ve a script.google.com
+    // 2. Abre tu proyecto "Formulario Machay"
+    // 3. Clic en "Implementar" > "Nueva implementación"
+    // 4. Tipo: "Aplicación web"
+    // 5. Ejecutar como: "Yo"
+    // 6. Acceso: "Cualquier persona"
+    // 7. Copia la URL que te da y pégala aquí abajo:
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/https://script.google.com/macros/s/AKfycbzvJgK5BEAs-naoec9mOi6228eAoNufhsa1ALUXFf37seBVbMsrqEaSUvg6xaumTz-m/exec/exec';
     
+    // 📧 Configuración del sistema
+    const CONFIG = {
+        emailNotificacion: 'henry_1022ctir@gmail.com',
+        nombreRestaurante: 'Machay Rooftop',
+        mostrarLogs: true, // Cambiar a false en producción
+        tiempoEspera: 10000 // 10 segundos máximo de espera
+    };
+    
+    // 🎯 FUNCIÓN PRINCIPAL DE ENVÍO
     async function submitForm(event) {
         event.preventDefault();
         
-        // Obtener elementos del formulario
+        // Validar configuración
+        if (GOOGLE_SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbzvJgK5BEAs-naoec9mOi6228eAoNufhsa1ALUXFf37seBVbMsrqEaSUvg6xaumTz-m/exec')) {
+            mostrarError('⚠️ CONFIGURACIÓN PENDIENTE', 
+                'Debes configurar la URL de Google Apps Script.\n\n' +
+                '1. Ve a tu Google Apps Script\n' +
+                '2. Copia la URL de implementación\n' +
+                '3. Pégala en contact.html línea 233');
+            return;
+        }
+        
+        // Obtener elementos del DOM
         const form = document.getElementById('contact');
         const submitBtn = document.getElementById('form-submit');
         const loading = document.getElementById('loading');
         
-        // Obtener datos del formulario
-        const formData = new FormData();
-        formData.append('name', document.getElementById('name').value);
-        formData.append('email', document.getElementById('email').value);
-        formData.append('phone', document.getElementById('phone').value);
-        formData.append('message', document.getElementById('message').value);
+        // Validar y obtener datos del formulario
+        const datosFormulario = obtenerDatosFormulario();
+        if (!datosFormulario) return;
         
-        // Mostrar indicador de carga
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = 'Enviando...';
-        loading.style.display = 'block';
+        // Preparar datos para envío
+        const formData = new FormData();
+        formData.append('name', datosFormulario.name);
+        formData.append('email', datosFormulario.email);
+        formData.append('phone', datosFormulario.phone);
+        formData.append('message', datosFormulario.message);
+        formData.append('userIP', 'Formulario Web');
+        formData.append('timestamp', new Date().toISOString());
+        
+        // Mostrar estado de carga
+        mostrarCargando(submitBtn, loading, true);
         
         try {
-            // Enviar datos a Google Sheets
-            const response = await fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                body: formData
-            });
+            log('📤 Enviando datos a Google Sheets...');
+            log('📊 Datos:', datosFormulario);
             
-            const result = await response.text();
+            // Enviar con timeout
+            const response = await Promise.race([
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Importante para Google Apps Script
+                    body: formData
+                }),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Timeout')), CONFIG.tiempoEspera)
+                )
+            ]);
+            
+            log('✅ Datos enviados exitosamente');
             
             // Mostrar mensaje de éxito
-            alert('¡Gracias por contactarnos! Tu mensaje ha sido enviado exitosamente. Te responderemos pronto.');
+            mostrarExito();
             
             // Limpiar formulario
             form.reset();
             
+            // Enviar evento de seguimiento (opcional)
+            enviarEventoSeguimiento('formulario_enviado', datosFormulario);
+            
         } catch (error) {
-            console.error('Error:', error);
-            alert('Hubo un error al enviar tu mensaje. Por favor, intenta nuevamente o contáctanos directamente.');
+            log('❌ Error al enviar:', error);
+            
+            if (error.message === 'Timeout') {
+                mostrarError('⏱️ Tiempo de espera agotado', 
+                    'El envío está tomando más tiempo del esperado.\n' +
+                    'Es posible que tu mensaje se haya enviado correctamente.\n\n' +
+                    'Si no recibes confirmación, contáctanos directamente.');
+            } else {
+                mostrarError('❌ Error de conexión', 
+                    'No se pudo enviar tu mensaje en este momento.\n\n' +
+                    '📞 Contáctanos directamente:\n' +
+                    '• Teléfono: +593 7 XXX-XXXX\n' +
+                    '• Email: info@machayrooftop.com');
+            }
         } finally {
-            // Restaurar botón
+            // Restaurar estado del botón
+            mostrarCargando(submitBtn, loading, false);
+        }
+    }
+    
+    // 📝 FUNCIÓN PARA OBTENER Y VALIDAR DATOS
+    function obtenerDatosFormulario() {
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const message = document.getElementById('message').value.trim();
+        
+        // Validaciones
+        if (!name || name.length < 2) {
+            mostrarError('❌ Nombre requerido', 'Por favor, ingresa tu nombre completo (mínimo 2 caracteres).');
+            document.getElementById('name').focus();
+            return null;
+        }
+        
+        if (!email || !validarEmail(email)) {
+            mostrarError('❌ Email inválido', 'Por favor, ingresa un email válido.');
+            document.getElementById('email').focus();
+            return null;
+        }
+        
+        if (!phone || phone.length < 7) {
+            mostrarError('❌ Teléfono requerido', 'Por favor, ingresa un número de teléfono válido.');
+            document.getElementById('phone').focus();
+            return null;
+        }
+        
+        if (!message || message.length < 10) {
+            mostrarError('❌ Mensaje muy corto', 'Por favor, escribe un mensaje más detallado (mínimo 10 caracteres).');
+            document.getElementById('message').focus();
+            return null;
+        }
+        
+        return { name, email, phone, message };
+    }
+    
+    // ✉️ VALIDADOR DE EMAIL
+    function validarEmail(email) {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    }
+    
+    // 🔄 FUNCIÓN PARA MOSTRAR/OCULTAR CARGA
+    function mostrarCargando(submitBtn, loading, mostrar) {
+        if (mostrar) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Enviando...';
+            loading.style.display = 'block';
+        } else {
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Enviar Mensaje';
             loading.style.display = 'none';
         }
     }
     
-    // Función de prueba (puedes eliminarla después)
-    function testConnection() {
-        console.log('Probando conexión con Google Sheets...');
-        submitForm({preventDefault: () => {}});
+    // 🎉 MENSAJE DE ÉXITO PERSONALIZADO
+    function mostrarExito() {
+        const modal = document.createElement('div');
+        modal.innerHTML = `
+            <div style="
+                position: fixed; 
+                top: 0; left: 0; 
+                width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                font-family: 'Roboto', sans-serif;
+            ">
+                <div style="
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 40px;
+                    border-radius: 20px;
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+                    text-align: center;
+                    max-width: 500px;
+                    margin: 20px;
+                    animation: slideIn 0.3s ease-out;
+                ">
+                    <div style="font-size: 60px; margin-bottom: 20px;">🎉</div>
+                    <h2 style="margin: 0 0 15px 0; color: white; font-size: 28px;">¡Mensaje Enviado!</h2>
+                    <p style="margin: 0 0 20px 0; opacity: 0.9; font-size: 16px; line-height: 1.5;">
+                        Gracias por contactarnos. Hemos recibido tu mensaje y te responderemos pronto para hacer de tu experiencia en <strong>${CONFIG.nombreRestaurante}</strong> algo inolvidable.
+                    </p>
+                    <div style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                        <p style="margin: 0; font-size: 14px; opacity: 0.8;">
+                            📧 También recibirás una confirmación en tu email<br>
+                            ⏱️ Tiempo de respuesta: 24-48 horas
+                        </p>
+                    </div>
+                    <button onclick="this.closest('[style*=position]').remove()" style="
+                        background: rgba(255,255,255,0.2);
+                        border: 2px solid rgba(255,255,255,0.3);
+                        color: white;
+                        padding: 12px 30px;
+                        border-radius: 25px;
+                        cursor: pointer;
+                        font-size: 16px;
+                        font-weight: 500;
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.background='rgba(255,255,255,0.3)'" 
+                       onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        Perfecto, gracias
+                    </button>
+                </div>
+            </div>
+            <style>
+                @keyframes slideIn {
+                    from { transform: translateY(-50px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+            </style>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Auto-cerrar después de 8 segundos
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.remove();
+            }
+        }, 8000);
     }
+    
+    // ❌ FUNCIÓN PARA MOSTRAR ERRORES
+    function mostrarError(titulo, mensaje) {
+        alert(`${titulo}\n\n${mensaje}`);
+    }
+    
+    // 📊 FUNCIÓN DE SEGUIMIENTO (OPCIONAL)
+    function enviarEventoSeguimiento(evento, datos) {
+        try {
+            // Aquí puedes integrar Google Analytics, Facebook Pixel, etc.
+            log(`📈 Evento: ${evento}`, datos);
+        } catch (error) {
+            log('Error en seguimiento:', error);
+        }
+    }
+    
+    // 🔍 FUNCIÓN DE LOGGING
+    function log(mensaje, datos = null) {
+        if (CONFIG.mostrarLogs) {
+            console.log(`[Machay Contact] ${mensaje}`, datos || '');
+        }
+    }
+    
+    // 🧪 FUNCIÓN DE PRUEBA AVANZADA
+    function testGoogleSheets() {
+        log('🧪 Iniciando prueba del sistema...');
+        
+        if (GOOGLE_SCRIPT_URL.includes('TU_SCRIPT_ID_AQUI')) {
+            log('❌ URL no configurada');
+            alert('⚠️ Configura primero la URL de Google Apps Script');
+            return;
+        }
+        
+        // Llenar formulario con datos de prueba
+        document.getElementById('name').value = 'Prueba Sistema';
+        document.getElementById('email').value = 'test@machayrooftop.com';
+        document.getElementById('phone').value = '0999999999';
+        document.getElementById('message').value = 'Este es un mensaje de prueba del sistema de contacto de Machay Rooftop. Si recibes este mensaje, el sistema está funcionando correctamente.';
+        
+        log('✅ Formulario llenado con datos de prueba');
+        alert('📝 Formulario llenado con datos de prueba.\n\nHaz clic en "Enviar Mensaje" para probar la conexión con Google Sheets.');
+    }
+    
+    // 🔄 FUNCIÓN DE REINICIO
+    function resetearFormulario() {
+        document.getElementById('contact').reset();
+        log('🔄 Formulario reiniciado');
+    }
+    
+    // 📱 DETECTAR DISPOSITIVO MÓVIL
+    function esMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    }
+    
+    // 🚀 INICIALIZACIÓN
+    document.addEventListener('DOMContentLoaded', function() {
+        log('🚀 Sistema de contacto Machay inicializado');
+        log('📱 Dispositivo móvil:', esMobile());
+        log('🔗 URL configurada:', GOOGLE_SCRIPT_URL.includes('TU_SCRIPT_ID_AQUI') ? 'NO' : 'SÍ');
+        
+        // Agregar eventos adicionales si es necesario
+        const form = document.getElementById('contact');
+        if (form) {
+            form.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    submitForm(e);
+                }
+            });
+        }
+    });
+    
+    // 🎯 FUNCIONES DISPONIBLES EN CONSOLA PARA DESARROLLO:
+    // testGoogleSheets() - Llenar formulario con datos de prueba
+    // resetearFormulario() - Limpiar formulario
+    // CONFIG.mostrarLogs = false - Desactivar logs
     </script>
 </body>
 </html>
