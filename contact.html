@@ -76,7 +76,7 @@ http://www.templatemo.com/tm-507-victory
                     <div class="section-heading">
                         <h2>Mensaje</h2>
                     </div>
-                    <form id="contact" action="https://formsubmit.co/1bkg3oun@robot.zapier.com" method="POST">
+                    <form id="contact" onsubmit="submitForm(event)">
                         <div class="row">
                             <div class="col-md-6">
                                 <fieldset>
@@ -94,9 +94,10 @@ http://www.templatemo.com/tm-507-victory
                                     <textarea name="message" rows="6" class="form-control" id="message" placeholder="Tu mensaje..." required></textarea>
                                 </fieldset>
                                 
-                                <!-- Campos ocultos de FormSubmit -->
-                                <input type="hidden" name="_captcha" value="false">
-                                <input type="hidden" name="_next" value="https://henrryospoter.github.io/Rest_Machay/contact.html">
+                                <!-- Indicador de carga -->
+                                <div id="loading" style="display: none; text-align: center; margin: 10px 0;">
+                                    <i class="fa fa-spinner fa-spin"></i> Enviando mensaje...
+                                </div>
                                 
                                 <fieldset>
                                     <button type="submit" id="form-submit" class="btn">Enviar Mensaje</button>
@@ -206,13 +207,61 @@ http://www.templatemo.com/tm-507-victory
     }
     </script>
 
-    <!-- Mensaje de éxito para FormSubmit -->
+    <!-- Script para Google Sheets -->
     <script>
-    // Mostrar mensaje de éxito si viene de FormSubmit
-    if (window.location.search.includes('success=true')) {
-        alert('¡Gracias por contactarnos! Tu mensaje ha sido enviado exitosamente. Te responderemos pronto.');
-        // Limpiar la URL
-        window.history.replaceState({}, document.title, window.location.pathname);
+    // ⚠️ IMPORTANTE: Reemplaza esta URL con la URL de tu Google Apps Script
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/https://script.google.com/macros/s/AKfycbzvJgK5BEAs-naoec9mOi6228eAoNufhsa1ALUXFf37seBVbMsrqEaSUvg6xaumTz-m/exec/exec';
+    
+    async function submitForm(event) {
+        event.preventDefault();
+        
+        // Obtener elementos del formulario
+        const form = document.getElementById('contact');
+        const submitBtn = document.getElementById('form-submit');
+        const loading = document.getElementById('loading');
+        
+        // Obtener datos del formulario
+        const formData = new FormData();
+        formData.append('name', document.getElementById('name').value);
+        formData.append('email', document.getElementById('email').value);
+        formData.append('phone', document.getElementById('phone').value);
+        formData.append('message', document.getElementById('message').value);
+        
+        // Mostrar indicador de carga
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Enviando...';
+        loading.style.display = 'block';
+        
+        try {
+            // Enviar datos a Google Sheets
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.text();
+            
+            // Mostrar mensaje de éxito
+            alert('¡Gracias por contactarnos! Tu mensaje ha sido enviado exitosamente. Te responderemos pronto.');
+            
+            // Limpiar formulario
+            form.reset();
+            
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Hubo un error al enviar tu mensaje. Por favor, intenta nuevamente o contáctanos directamente.');
+        } finally {
+            // Restaurar botón
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Enviar Mensaje';
+            loading.style.display = 'none';
+        }
+    }
+    
+    // Función de prueba (puedes eliminarla después)
+    function testConnection() {
+        console.log('Probando conexión con Google Sheets...');
+        submitForm({preventDefault: () => {}});
     }
     </script>
 </body>
