@@ -103,15 +103,6 @@ http://www.templatemo.com/tm-507-victory
                                     <button type="submit" id="form-submit" class="btn">Enviar Mensaje</button>
                                 </fieldset>
                                 
-                                <!-- 🧪 BOTÓN DE PRUEBA (REMOVER EN PRODUCCIÓN) -->
-                                <fieldset style="margin-top: 10px;">
-                                    <button type="button" onclick="testGoogleSheets()" class="btn" style="background: #ff6b35; border-color: #ff6b35;">
-                                        🧪 Llenar Datos de Prueba
-                                    </button>
-                                    <small style="display: block; margin-top: 5px; color: #666; font-size: 12px;">
-                                        ⚠️ Solo para pruebas - Remover en producción
-                                    </small>
-                                </fieldset>
                             </div>
                         </div>
                     </form>
@@ -233,7 +224,7 @@ http://www.templatemo.com/tm-507-victory
     
     // 📧 Configuración del sistema
     const CONFIG = {
-        emailNotificacion: 'henry_1022ctir@gmail.com',
+        emailNotificacion: '',
         nombreRestaurante: 'Machay Rooftop',
         mostrarLogs: true, // Cambiar a false en producción
         tiempoEspera: 10000 // 10 segundos máximo de espera
@@ -245,7 +236,6 @@ http://www.templatemo.com/tm-507-victory
         
         // Validar configuración
         if (GOOGLE_SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbzvJgK5BEAs-naoec9mOi6228eAoNufhsa1ALUXFf37seBVbMsrqEaSUvg6xaumTz-m/exec')) {
-            
         }
         
         // Obtener elementos del DOM
@@ -343,8 +333,8 @@ http://www.templatemo.com/tm-507-victory
             return null;
         }
         
-        if (!message || message.length < 10) {
-            mostrarError('❌ Mensaje muy corto', 'Por favor, escribe un mensaje más detallado (mínimo 10 caracteres).');
+        if (!message || message.length < 5) {
+            mostrarError('❌ Mensaje muy corto', 'Por favor, escribe un mensaje más detallado (mínimo 5 caracteres).');
             document.getElementById('message').focus();
             return null;
         }
@@ -434,12 +424,12 @@ http://www.templatemo.com/tm-507-victory
         
         document.body.appendChild(modal);
         
-        // Auto-cerrar después de 8 segundos
+        // Auto-cerrar después de 10 segundos
         setTimeout(() => {
             if (modal.parentNode) {
                 modal.remove();
             }
-        }, 8000);
+        }, 10000);
     }
     
     // ❌ FUNCIÓN PARA MOSTRAR ERRORES
@@ -465,24 +455,24 @@ http://www.templatemo.com/tm-507-victory
     }
     
     // 🧪 FUNCIÓN DE PRUEBA AVANZADA
-    function testGoogleSheets() {
-        log('🧪 Iniciando prueba del sistema...');
-        
-        if (GOOGLE_SCRIPT_URL.includes('TU_SCRIPT_ID_AQUI')) {
-            log('❌ URL no configurada');
-            alert('⚠️ Configura primero la URL de Google Apps Script');
-            return;
-        }
+   // function testGoogleSheets() {
+   //     log('🧪 Iniciando prueba del sistema...');
+   //     
+   //     if (GOOGLE_SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbzvJgK5BEAs-naoec9mOi6228eAoNufhsa1ALUXFf37seBVbMsrqEaSUvg6xaumTz-m/exec')) {
+   //         log('❌ URL no configurada');
+   //         alert('⚠️ Configura primero la URL de Google Apps Script');
+   //         return;
+   //     }
         
         // Llenar formulario con datos de prueba
-        document.getElementById('name').value = 'Prueba Sistema';
-        document.getElementById('email').value = 'test@machayrooftop.com';
-        document.getElementById('phone').value = '0999999999';
-        document.getElementById('message').value = 'Este es un mensaje de prueba del sistema de contacto de Machay Rooftop. Si recibes este mensaje, el sistema está funcionando correctamente.';
+    //    document.getElementById('name').value = 'Prueba Sistema';
+   //     document.getElementById('email').value = 'test@machayrooftop.com';
+   //     document.getElementById('phone').value = '0999999999';
+   //     document.getElementById('message').value = 'Este es un mensaje de prueba del sistema de contacto de Machay Rooftop. Si recibes este mensaje, el sistema está funcionando correctamente.';
         
-        log('✅ Formulario llenado con datos de prueba');
-        alert('📝 Formulario llenado con datos de prueba.\n\nHaz clic en "Enviar Mensaje" para probar la conexión con Google Sheets.');
-    }
+   //     log('✅ Formulario llenado con datos de prueba');
+   //     alert('📝 Formulario llenado con datos de prueba.\n\nHaz clic en "Enviar Mensaje" para probar la conexión con Google Sheets.');
+    //} 
     
     // 🔄 FUNCIÓN DE REINICIO
     function resetearFormulario() {
