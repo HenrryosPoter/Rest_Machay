@@ -229,7 +229,7 @@ http://www.templatemo.com/tm-507-victory
     // 5. Ejecutar como: "Yo"
     // 6. Acceso: "Cualquier persona"
     // 7. Copia la URL que te da y pégala aquí abajo:
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/https://script.google.com/macros/s/AKfycbzvJgK5BEAs-naoec9mOi6228eAoNufhsa1ALUXFf37seBVbMsrqEaSUvg6xaumTz-m/exec/exec';
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzvJgK5BEAs-naoec9mOi6228eAoNufhsa1ALUXFf37seBVbMsrqEaSUvg6xaumTz-m/exec';
     
     // 📧 Configuración del sistema
     const CONFIG = {
@@ -245,12 +245,7 @@ http://www.templatemo.com/tm-507-victory
         
         // Validar configuración
         if (GOOGLE_SCRIPT_URL.includes('https://script.google.com/macros/s/AKfycbzvJgK5BEAs-naoec9mOi6228eAoNufhsa1ALUXFf37seBVbMsrqEaSUvg6xaumTz-m/exec')) {
-            mostrarError('⚠️ CONFIGURACIÓN PENDIENTE', 
-                'Debes configurar la URL de Google Apps Script.\n\n' +
-                '1. Ve a tu Google Apps Script\n' +
-                '2. Copia la URL de implementación\n' +
-                '3. Pégala en contact.html línea 233');
-            return;
+            
         }
         
         // Obtener elementos del DOM
